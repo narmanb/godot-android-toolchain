@@ -81,12 +81,13 @@ jobs:
       - name: Package reusable local toolchain
         run: |
           set -euxo pipefail
-          mkdir -p bundle/godot bundle/export_templates bundle/android-sdk bundle/meta
+          mkdir -p bundle/godot bundle/export_templates bundle/android-sdk/platforms bundle/android-sdk/build-tools bundle/meta
           cp "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" bundle/godot/godot
-          cp -a "$HOME/.local/share/godot/export_templates/4.7.2.stable/." bundle/export_templates/
+          cp "$HOME/.local/share/godot/export_templates/4.7.2.stable/android_debug.apk" bundle/export_templates/
+          cp "$HOME/.local/share/godot/export_templates/4.7.2.stable/android_release.apk" bundle/export_templates/
           cp -a "$ANDROID_HOME/platform-tools" bundle/android-sdk/
-          cp -a "$ANDROID_HOME/platforms/android-35" bundle/android-sdk/platforms-android-35
-          cp -a "$ANDROID_HOME/build-tools/35.0.0" bundle/android-sdk/build-tools-35.0.0
+          cp -a "$ANDROID_HOME/platforms/android-35" bundle/android-sdk/platforms/android-35
+          cp -a "$ANDROID_HOME/build-tools/35.0.0" bundle/android-sdk/build-tools/35.0.0
           printf 'Godot 4.7.2 stable\nJava 21 required\nAndroid platform 35\nAndroid build-tools 35.0.0\n' > bundle/meta/VERSIONS.txt
           sha256sum bundle/godot/godot bundle/export_templates/android_debug.apk bundle/export_templates/android_release.apk > bundle/meta/SHA256SUMS.txt
           cp dist/toolchain-canary.apk bundle/meta/
@@ -96,5 +97,6 @@ jobs:
         with:
           name: godot-4.7.2-android-local-toolchain
           path: bundle
+          compression-level: 9
           if-no-files-found: error
           retention-days: 30
