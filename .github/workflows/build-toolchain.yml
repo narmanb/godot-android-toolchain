@@ -47,7 +47,7 @@ jobs:
           yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" --version
-          "$ANDROID_HOME/build-tools/35.0.0/zipalign" -h >/dev/null
+          test -x "$ANDROID_HOME/build-tools/35.0.0/zipalign"
 
       - name: Configure Godot Android editor settings
         run: |
