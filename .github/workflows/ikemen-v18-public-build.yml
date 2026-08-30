@@ -1,4 +1,4 @@
-name: IKEMEN Installer v1.8 Public Build
+name: IKEMEN Installer v1.8.1 Public Build
 
 on:
   pull_request:
@@ -45,25 +45,30 @@ jobs:
       - name: Generate v1.8 source
         run: python3 tools/patch_installer_v18.py
 
-      - name: Verify v1.8 sources
+      - name: Generate v1.8.1 source
+        run: python3 tools/patch_installer_v181.py
+
+      - name: Verify v1.8.1 sources
         run: |
-          grep -F "versionName '1.8'" app/build.gradle
-          grep -F 'InstallerActivityV18' app/src/main/AndroidManifest.xml
-          grep -F 'Install ONE ZIP / RAR / 7Z character' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV18.java
-          grep -F 'Remove installed character' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV18.java
-          grep -F 'canonicalRosterEntry' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV18.java
-          grep -F 'SevenZFile' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV18.java
-          grep -F 'Deep-scan installed command lists' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV18.java
+          grep -F "versionName '1.8.1'" app/build.gradle
+          grep -F 'InstallerActivityV181' app/src/main/AndroidManifest.xml
+          grep -F 'Install ONE ZIP / RAR / 7Z character' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          grep -F 'Remove installed character' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          grep -F 'canonicalRosterEntry' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          grep -F 'SevenZFile' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          grep -F 'Deep-scan installed command lists' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          grep -F 'Do not MIME-filter archives here' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java
+          if grep -F 'Intent.EXTRA_MIME_TYPES' app/src/main/java/com/narmanb/ikemeninstaller/InstallerActivityV181.java; then exit 1; fi
 
       - name: Build debug APK
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk IKEMEN-Content-Installer-v1.8.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk IKEMEN-Content-Installer-v1.8.1.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: IKEMEN-Content-Installer-v1.8
-          path: ikemen-v18-build/IKEMEN-Content-Installer-v1.8.apk
+          name: IKEMEN-Content-Installer-v1.8.1
+          path: ikemen-v18-build/IKEMEN-Content-Installer-v1.8.1.apk
           if-no-files-found: error
