@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="150" viewBox="0 0 512 150">
+  <rect width="512" height="150" fill="#f6ead6"/>
+  <path d="M0 0 H512 V30 H0Z" fill="#cfeeb9"/>
+  <path d="M0 30 H512 V72 H0Z" fill="#9fd7c5"/>
+  <path d="M0 72 H512 V110 H0Z" fill="#f6c8d7"/>
+  <path d="M0 110 H512 V150 H0Z" fill="#f5d7a7"/>
+  <g fill="none" stroke="#89c171" stroke-width="4" opacity=".7">
+    <path d="M0 22 Q64 4 128 22 T256 22 T384 22 T512 22"/>
+    <path d="M0 50 Q64 32 128 50 T256 50 T384 50 T512 50"/>
+  </g>
+  <g fill="#fff8ea" opacity=".72">
+    <circle cx="54" cy="16" r="6"/><circle cx="190" cy="44" r="6"/><circle cx="346" cy="86" r="7"/><circle cx="456" cy="126" r="7"/>
+  </g>
+  <g stroke="#d9b877" stroke-width="6" opacity=".75">
+    <line x1="0" y1="112" x2="512" y2="112"/>
+    <line x1="36" y1="112" x2="36" y2="150"/>
+    <line x1="148" y1="112" x2="148" y2="150"/>
+    <line x1="260" y1="112" x2="260" y2="150"/>
+    <line x1="372" y1="112" x2="372" y2="150"/>
+    <line x1="484" y1="112" x2="484" y2="150"/>
+  </g>
+</svg>
