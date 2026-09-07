@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <g opacity=".5">
+    <path d="M0 560 C180 500 292 510 430 545 C575 582 705 585 850 548 C992 512 1104 514 1280 555 L1280 720 L0 720Z" fill="#9b8ad8"/>
+    <path d="M0 593 C160 547 275 612 430 567 C575 524 652 615 800 567 C942 522 1088 611 1280 546 L1280 720 L0 720Z" fill="#79d2c9" opacity=".76"/>
+  </g>
+  <g stroke="#655666" stroke-width="5" stroke-linejoin="round" opacity=".95">
+    <path d="M0 508 H1280" stroke="#cda6b4" stroke-width="6"/>
+    <path d="M0 556 H1280" stroke="#e9d8bf" stroke-width="5"/>
+    <rect x="72" y="420" width="170" height="88" rx="8" fill="#f4c1d2"/>
+    <polygon points="58,424 157,370 256,424" fill="#eaa5bc"/>
+    <rect x="112" y="448" width="36" height="28" fill="#fff9f0"/>
+    <rect x="170" y="448" width="34" height="28" fill="#fff9f0"/>
+    <path d="M96 507 v-54 M132 507 v-54 M168 507 v-54 M204 507 v-54 M240 507 v-54" stroke="#f5edd8" stroke-width="8" stroke-linecap="round"/>
+    <rect x="320" y="404" width="154" height="104" rx="8" fill="#d9cff6"/>
+    <polygon points="306,408 397,356 488,408" fill="#bfa8eb"/>
+    <rect x="346" y="440" width="34" height="30" fill="#fff9f0"/>
+    <rect x="412" y="440" width="30" height="48" fill="#ffe6bf"/>
+    <path d="M342 507 v-62 M372 507 v-62 M402 507 v-62 M432 507 v-62 M462 507 v-62" stroke="#f6f2df" stroke-width="7" stroke-linecap="round"/>
+    <path d="M558 508 C576 461 615 437 668 437 C709 437 740 449 765 474 C777 488 788 507 792 508" fill="none" stroke="#86bca6" stroke-width="8"/>
+    <path d="M595 500 C586 467 596 445 620 432 C643 445 651 475 638 504" fill="#ffcf8e"/>
+    <circle cx="619" cy="431" r="18" fill="#fff0c6"/>
+    <circle cx="612" cy="424" r="4" fill="#d89bc7" stroke="none"/>
+    <circle cx="626" cy="437" r="4" fill="#92ddd2" stroke="none"/>
+    <path d="M854 514 C870 455 919 427 979 428 C1031 429 1073 446 1104 484 C1114 497 1120 507 1122 514" fill="none" stroke="#86bca6" stroke-width="8"/>
+    <rect x="900" y="454" width="56" height="36" rx="12" fill="#ffe7b9"/>
+    <rect x="914" y="434" width="28" height="24" rx="10" fill="#fff6d2"/>
+    <rect x="953" y="466" width="34" height="28" rx="9" fill="#f4c7d9"/>
+  </g>
+  <g fill="none" stroke="#fff3df" stroke-width="8" stroke-linecap="round" opacity=".58">
+    <path d="M185 380 q42 -42 84 0 q42 42 84 0"/>
+    <path d="M990 344 q40 -46 80 0 q40 46 80 0"/>
+  </g>
+</svg>
