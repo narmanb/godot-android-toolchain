@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="150" height="160" viewBox="0 0 150 160">
-  <path d="M76 154 C73 119 75 88 74 62" stroke="#4e8f7a" stroke-width="12" stroke-linecap="round"/>
-  <path d="M72 114 C48 96 34 102 29 121 C49 127 61 124 72 114Z" fill="#8edecb" stroke="#54345f" stroke-width="5"/>
-  <path d="M78 99 C100 79 116 84 123 103 C103 113 90 111 78 99Z" fill="#a98be0" stroke="#54345f" stroke-width="5"/>
-  <g transform="translate(74 55)" stroke="#54345f" stroke-width="5">
-    <ellipse rx="20" ry="35" fill="#f59cbc" transform="rotate(0) translate(0 -29)"/>
-    <ellipse rx="20" ry="35" fill="#ffd899" transform="rotate(60) translate(0 -29)"/>
-    <ellipse rx="20" ry="35" fill="#9adfd2" transform="rotate(120) translate(0 -29)"/>
-    <ellipse rx="20" ry="35" fill="#f59cbc" transform="rotate(180) translate(0 -29)"/>
-    <ellipse rx="20" ry="35" fill="#ffd899" transform="rotate(240) translate(0 -29)"/>
-    <ellipse rx="20" ry="35" fill="#9adfd2" transform="rotate(300) translate(0 -29)"/>
-    <circle r="24" fill="#fff0b8"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="180" viewBox="0 0 150 180">
+  <path d="M76 170 C74 139 76 104 75 75" stroke="#5c917a" stroke-width="10" stroke-linecap="round"/>
+  <path d="M74 124 C56 109 44 111 36 124 C54 131 65 130 74 124Z" fill="#9ce1cf" stroke="#54345f" stroke-width="4"/>
+  <path d="M77 108 C96 93 111 95 120 109 C104 117 90 117 77 108Z" fill="#c6b0ee" stroke="#54345f" stroke-width="4"/>
+  <g transform="translate(74 58)" stroke="#54345f" stroke-width="4.5">
+    <ellipse rx="18" ry="28" fill="#f6aec8" transform="rotate(0) translate(0 -27)"/>
+    <ellipse rx="18" ry="28" fill="#ffe0a6" transform="rotate(60) translate(0 -27)"/>
+    <ellipse rx="18" ry="28" fill="#a8e2d6" transform="rotate(120) translate(0 -27)"/>
+    <ellipse rx="18" ry="28" fill="#f6aec8" transform="rotate(180) translate(0 -27)"/>
+    <ellipse rx="18" ry="28" fill="#ffe0a6" transform="rotate(240) translate(0 -27)"/>
+    <ellipse rx="18" ry="28" fill="#a8e2d6" transform="rotate(300) translate(0 -27)"/>
+    <circle r="22" fill="#fff2bb"/>
   </g>
 </svg>
