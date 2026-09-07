@@ -2,14 +2,15 @@ extends Node2D
 
 const VIEW_W := 1280.0
 const VIEW_H := 720.0
-const GROUND_Y := 570.0
-const FELIX_X := 235.0
-const FELIX_SCALE := 0.66
-const GRAVITY := 2600.0
-const JUMP_SPEED := -930.0
-const MAX_FALL_SPEED := 1700.0
+const GROUND_Y := 572.0
+const FELIX_X := 242.0
+const FELIX_SCALE := 0.82
+const GRAVITY := 2700.0
+const JUMP_SPEED := -990.0
+const MAX_FALL_SPEED := 1780.0
 const COYOTE_TIME := 0.10
 const JUMP_BUFFER := 0.11
+const HOUSE_MODE_DURATION := 6.4
 
 var felix: AnimatedSprite2D
 var felix_y := 0.0
@@ -24,7 +25,7 @@ var dead := false
 var elapsed := 0.0
 var distance := 0.0
 var world_speed := 500.0
-var spawn_timer := 1.6
+var spawn_timer := 1.5
 var obstacles: Array = []
 var ground_tiles: Array[Sprite2D] = []
 var mid_tiles: Array[Sprite2D] = []
@@ -39,7 +40,21 @@ var best_distance := 0
 var rng := RandomNumberGenerator.new()
 
 var sparkle_tex: Texture2D
-var obstacle_textures: Array[Texture2D] = []
+var yard_obstacle_textures: Array[Texture2D] = []
+var house_obstacle_textures: Array[Texture2D] = []
+
+var far_bg: Sprite2D
+var mode := "yard"
+var house_mode_left := 0.0
+var house_cooldown := 360.0
+var interior_notice_left := 0.0
+
+const YARD_FAR := "res://assets/yard_bg_far.svg"
+const YARD_MID := "res://assets/yard_bg_mid.svg"
+const YARD_GROUND := "res://assets/yard_ground_tile.svg"
+const HOUSE_FAR := "res://assets/house_bg_far.svg"
+const HOUSE_MID := "res://assets/house_bg_mid.svg"
+const HOUSE_GROUND := "res://assets/house_ground_tile.svg"
 
 func _ready() -> void:
     rng.randomize()
@@ -48,15 +63,13 @@ func _ready() -> void:
     _reset_run(false)
 
 func _build_world() -> void:
-    var bg := Sprite2D.new()
-    bg.texture = load("res://assets/bg_far.svg")
-    bg.position = Vector2(VIEW_W * 0.5, VIEW_H * 0.5)
-    bg.z_index = -30
-    add_child(bg)
+    far_bg = Sprite2D.new()
+    far_bg.position = Vector2(VIEW_W * 0.5, VIEW_H * 0.5)
+    far_bg.z_index = -30
+    add_child(far_bg)
 
     for i in range(2):
         var mid := Sprite2D.new()
-        mid.texture = load("res://assets/bg_mid.svg")
         mid.position = Vector2(VIEW_W * 0.5 + i * VIEW_W, VIEW_H * 0.5)
         mid.z_index = -20
         add_child(mid)
@@ -64,23 +77,27 @@ func _build_world() -> void:
 
     for i in range(4):
         var tile := Sprite2D.new()
-        tile.texture = load("res://assets/ground_tile.svg")
         tile.position = Vector2(256.0 + i * 512.0, 645.0)
         tile.z_index = 2
         add_child(tile)
         ground_tiles.append(tile)
 
     sparkle_tex = load("res://assets/sparkle.svg")
-    obstacle_textures = [
+    yard_obstacle_textures = [
         load("res://assets/obstacle_flower.svg"),
         load("res://assets/obstacle_crystal.svg"),
         load("res://assets/obstacle_lollipop.svg")
+    ]
+    house_obstacle_textures = [
+        load("res://assets/house_obstacle_box.svg"),
+        load("res://assets/house_obstacle_stool.svg"),
+        load("res://assets/house_obstacle_toy.svg")
     ]
 
     felix = AnimatedSprite2D.new()
     var frames := SpriteFrames.new()
     frames.add_animation("run")
-    frames.set_animation_speed("run", 11.0)
+    frames.set_animation_speed("run", 13.0)
     frames.set_animation_loop("run", true)
     frames.add_frame("run", load("res://assets/felix_run_1.svg"))
     frames.add_frame("run", load("res://assets/felix_run_2.svg"))
@@ -97,8 +114,9 @@ func _build_world() -> void:
     add_child(felix)
     felix.play("run")
 
-    felix_rest_y = GROUND_Y - 122.0 * FELIX_SCALE * 0.5
+    felix_rest_y = GROUND_Y - 126.0 * FELIX_SCALE * 0.5
     _make_ui()
+    _apply_environment_visuals("yard")
 
 func _make_ui() -> void:
     title_label = _new_label("RUN FELIX, RUN", 54, Vector2(38, 26), Color("#4a235e"), 8)
@@ -119,7 +137,7 @@ func _make_ui() -> void:
     message_label.size = Vector2(VIEW_W, 65)
     message_label.z_index = 30
 
-    submessage_label = _new_label("Tap anywhere to jump  •  Gamepad A / Space also works", 24, Vector2(0, 326), Color("#fff8e7"), 6)
+    submessage_label = _new_label("Tap anywhere to jump  •  Felix now runs through pastel neighborhood yards", 24, Vector2(0, 326), Color("#fff8e7"), 6)
     submessage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     submessage_label.size = Vector2(VIEW_W, 48)
     submessage_label.z_index = 30
@@ -201,9 +219,21 @@ func _process(delta: float) -> void:
 
     felix.position.y = felix_y
 
-    world_speed = minf(785.0, 500.0 + distance * 0.85)
+    world_speed = minf(810.0, 500.0 + distance * 0.84)
     distance += world_speed * delta / 100.0
     score_label.text = "%d m" % int(distance)
+
+    if house_cooldown > 0.0:
+        house_cooldown -= world_speed * delta / 100.0
+    if house_mode_left > 0.0:
+        house_mode_left -= delta
+        if house_mode_left <= 0.0:
+            _leave_house()
+    if interior_notice_left > 0.0:
+        interior_notice_left -= delta
+        if interior_notice_left <= 0.0 and not dead and running:
+            message_label.visible = false
+            submessage_label.visible = false
 
     _scroll_ground(delta)
     _update_obstacles(delta)
@@ -211,11 +241,13 @@ func _process(delta: float) -> void:
     spawn_timer -= delta
     if spawn_timer <= 0.0:
         _spawn_obstacle()
-        var pace := clampf((world_speed - 500.0) / 285.0, 0.0, 1.0)
-        spawn_timer = rng.randf_range(1.35, 2.25) - pace * 0.18
+        var pace := clampf((world_speed - 500.0) / 310.0, 0.0, 1.0)
+        spawn_timer = rng.randf_range(1.25, 2.05) - pace * 0.16
+        if mode == "house":
+            spawn_timer -= 0.07
 
-    if on_ground and rng.randf() < delta * 10.0:
-        _spawn_sparkle(Vector2(FELIX_X - 58.0, felix_y + 37.0), 0.42, 0.65)
+    if on_ground and rng.randf() < delta * 11.0:
+        _spawn_sparkle(Vector2(FELIX_X - 60.0, felix_y + 42.0), 0.42, 0.65)
 
     _check_collisions()
 
@@ -224,10 +256,49 @@ func _jump() -> void:
     on_ground = false
     felix.play("jump")
     for i in range(5):
-        _spawn_sparkle(Vector2(FELIX_X - 42.0 + rng.randf_range(-12.0, 16.0), felix_y + 38.0), rng.randf_range(0.5, 0.9), rng.randf_range(0.55, 0.95))
+        _spawn_sparkle(Vector2(FELIX_X - 40.0 + rng.randf_range(-12.0, 16.0), felix_y + 40.0), rng.randf_range(0.5, 0.9), rng.randf_range(0.55, 0.95))
+
+func _apply_environment_visuals(new_mode: String) -> void:
+    mode = new_mode
+    if mode == "yard":
+        far_bg.texture = load(YARD_FAR)
+        for mid in mid_tiles:
+            mid.texture = load(YARD_MID)
+        for tile in ground_tiles:
+            tile.texture = load(YARD_GROUND)
+    else:
+        far_bg.texture = load(HOUSE_FAR)
+        for mid in mid_tiles:
+            mid.texture = load(HOUSE_MID)
+        for tile in ground_tiles:
+            tile.texture = load(HOUSE_GROUND)
+
+func _enter_house() -> void:
+    house_mode_left = HOUSE_MODE_DURATION
+    _apply_environment_visuals("house")
+    for i in range(8):
+        _spawn_sparkle(Vector2(FELIX_X + rng.randf_range(-30.0, 50.0), felix_y + rng.randf_range(-40.0, 26.0)), rng.randf_range(0.55, 1.0), rng.randf_range(0.6, 1.05))
+    message_label.text = "THROUGH THE WINDOW!"
+    submessage_label.text = "Felix is tearing through the house"
+    message_label.visible = true
+    submessage_label.visible = true
+    interior_notice_left = 1.0
+
+func _leave_house() -> void:
+    _apply_environment_visuals("yard")
+    house_cooldown = 400.0 + rng.randf_range(0.0, 120.0)
+    for i in range(8):
+        _spawn_sparkle(Vector2(FELIX_X + rng.randf_range(-30.0, 50.0), felix_y + rng.randf_range(-36.0, 22.0)), rng.randf_range(0.55, 1.0), rng.randf_range(0.6, 1.0))
+    message_label.text = "BACK OUTSIDE!"
+    submessage_label.text = "Pastel yard sprint resumed"
+    message_label.visible = true
+    submessage_label.visible = true
+    interior_notice_left = 0.9
 
 func _update_background(delta: float) -> void:
-    var mid_speed := 34.0 if running and not dead else 9.0
+    var mid_speed := 44.0 if running and not dead else 10.0
+    if mode == "house":
+        mid_speed = 26.0 if running and not dead else 6.0
     for mid in mid_tiles:
         mid.position.x -= mid_speed * delta
         if mid.position.x <= -VIEW_W * 0.5:
@@ -245,21 +316,57 @@ func _scroll_ground(delta: float) -> void:
             rightmost = tile.position.x
 
 func _spawn_obstacle() -> void:
-    var type := rng.randi_range(0, obstacle_textures.size() - 1)
+    if mode == "yard" and house_cooldown <= 0.0 and distance > 60.0 and rng.randf() < 0.22:
+        _spawn_house_entry()
+        house_cooldown = 99999.0
+        return
+
+    if mode == "yard":
+        var yard_type: int = rng.randi_range(0, yard_obstacle_textures.size() - 1)
+        var yard_scale: float = [0.8, 0.86, 0.88][yard_type]
+        var yard_h: float = [150.0, 146.0, 120.0][yard_type] * yard_scale
+        var yard_w: float = [104.0, 82.0, 118.0][yard_type] * yard_scale
+        _add_simple_obstacle(yard_obstacle_textures[yard_type], yard_w, yard_h, yard_scale, GROUND_Y - yard_h * 0.5 + 3.0, "yard")
+    else:
+        var house_type: int = rng.randi_range(0, house_obstacle_textures.size() - 1)
+        var house_scale: float = [0.86, 0.8, 0.76][house_type]
+        var house_h: float = [110.0, 98.0, 92.0][house_type] * house_scale
+        var house_w: float = [104.0, 90.0, 96.0][house_type] * house_scale
+        _add_simple_obstacle(house_obstacle_textures[house_type], house_w, house_h, house_scale, GROUND_Y - house_h * 0.5 + 2.0, "house")
+
+func _add_simple_obstacle(texture: Texture2D, w: float, h: float, scale_value: float, y_pos: float, env: String) -> void:
     var sprite := Sprite2D.new()
-    sprite.texture = obstacle_textures[type]
-    sprite.position.x = VIEW_W + 110.0
-    sprite.z_index = 4
-    var scale_value: float = [0.72, 0.66, 0.72][type]
+    sprite.texture = texture
+    sprite.position = Vector2(VIEW_W + 110.0, y_pos)
     sprite.scale = Vector2.ONE * scale_value
-    var h: float = [132.0, 150.0, 146.0][type] * scale_value
-    sprite.position.y = GROUND_Y - h * 0.5 + 5.0
+    sprite.z_index = 4
     add_child(sprite)
     obstacles.append({
+        "kind": "normal",
         "sprite": sprite,
-        "type": type,
-        "w": [92.0, 90.0, 76.0][type] * scale_value,
-        "h": h * 0.82
+        "w": w,
+        "h": h * 0.84,
+        "env": env
+    })
+
+func _spawn_house_entry() -> void:
+    var sprite := Sprite2D.new()
+    sprite.texture = load("res://assets/house_entry.svg")
+    sprite.position = Vector2(VIEW_W + 170.0, 430.0)
+    sprite.scale = Vector2.ONE * 1.0
+    sprite.z_index = 3
+    add_child(sprite)
+    obstacles.append({
+        "kind": "house_entry",
+        "sprite": sprite,
+        "entered": false,
+        "w": 250.0,
+        "h": 250.0,
+        "opening": Rect2(-38.0, -72.0, 92.0, 100.0),
+        "solid_top": Rect2(-125.0, -128.0, 250.0, 56.0),
+        "solid_bottom": Rect2(-125.0, 28.0, 250.0, 100.0),
+        "solid_left": Rect2(-125.0, -72.0, 70.0, 100.0),
+        "solid_right": Rect2(54.0, -72.0, 71.0, 100.0)
     })
 
 func _update_obstacles(delta: float) -> void:
@@ -267,24 +374,50 @@ func _update_obstacles(delta: float) -> void:
         var ob = obstacles[i]
         var sprite: Sprite2D = ob["sprite"]
         sprite.position.x -= world_speed * delta
-        sprite.rotation = sin(elapsed * 3.0 + float(i)) * 0.018
-        if sprite.position.x < -140.0:
+        if ob["kind"] == "normal":
+            sprite.rotation = sin(elapsed * 3.0 + float(i)) * 0.012
+        else:
+            sprite.rotation = 0.0
+            var opening: Rect2 = ob["opening"]
+            var window_rect := Rect2(sprite.position.x + opening.position.x, sprite.position.y + opening.position.y, opening.size.x, opening.size.y)
+            if not bool(ob["entered"]) and _felix_rect().intersects(window_rect):
+                ob["entered"] = true
+                obstacles[i] = ob
+            if sprite.position.x < FELIX_X - 170.0 and bool(ob["entered"]):
+                sprite.queue_free()
+                obstacles.remove_at(i)
+                _enter_house()
+                continue
+        if sprite.position.x < -260.0:
             sprite.queue_free()
             obstacles.remove_at(i)
 
 func _felix_rect() -> Rect2:
-    return Rect2(FELIX_X - 38.0, felix_y - 41.0, 78.0, 77.0)
+    return Rect2(FELIX_X - 42.0, felix_y - 42.0, 84.0, 82.0)
 
 func _check_collisions() -> void:
     var f_rect := _felix_rect()
     for ob in obstacles:
         var sprite: Sprite2D = ob["sprite"]
-        var w: float = ob["w"]
-        var h: float = ob["h"]
-        var o_rect := Rect2(sprite.position.x - w * 0.5, sprite.position.y - h * 0.5, w, h)
-        if f_rect.intersects(o_rect):
-            _game_over()
-            return
+        if ob["kind"] == "house_entry":
+            var top_local: Rect2 = ob["solid_top"]
+            var bottom_local: Rect2 = ob["solid_bottom"]
+            var left_local: Rect2 = ob["solid_left"]
+            var right_local: Rect2 = ob["solid_right"]
+            var top_rect := Rect2(sprite.position.x + top_local.position.x, sprite.position.y + top_local.position.y, top_local.size.x, top_local.size.y)
+            var bottom_rect := Rect2(sprite.position.x + bottom_local.position.x, sprite.position.y + bottom_local.position.y, bottom_local.size.x, bottom_local.size.y)
+            var left_rect := Rect2(sprite.position.x + left_local.position.x, sprite.position.y + left_local.position.y, left_local.size.x, left_local.size.y)
+            var right_rect := Rect2(sprite.position.x + right_local.position.x, sprite.position.y + right_local.position.y, right_local.size.x, right_local.size.y)
+            if f_rect.intersects(top_rect) or f_rect.intersects(bottom_rect) or f_rect.intersects(left_rect) or f_rect.intersects(right_rect):
+                _game_over()
+                return
+        else:
+            var w: float = ob["w"]
+            var h: float = ob["h"]
+            var o_rect := Rect2(sprite.position.x - w * 0.5, sprite.position.y - h * 0.5, w, h)
+            if f_rect.intersects(o_rect):
+                _game_over()
+                return
 
 func _game_over() -> void:
     dead = true
@@ -307,17 +440,21 @@ func _reset_run(start_immediately: bool) -> void:
     obstacles.clear()
     distance = 0.0
     world_speed = 500.0
-    spawn_timer = 1.5
+    spawn_timer = 1.45
     dead = false
     running = start_immediately
     on_ground = true
     felix_vy = 0.0
     felix_y = felix_rest_y
+    house_mode_left = 0.0
+    house_cooldown = 330.0
+    interior_notice_left = 0.0
+    _apply_environment_visuals("yard")
     felix.position = Vector2(FELIX_X, felix_y)
     felix.play("run")
     score_label.text = "0 m"
     message_label.text = "TAP TO RUN"
-    submessage_label.text = "Tap anywhere to jump  •  Gamepad A / Space also works"
+    submessage_label.text = "Tap anywhere to jump  •  Jump through open windows when houses appear"
     message_label.visible = not start_immediately
     submessage_label.visible = not start_immediately
 
