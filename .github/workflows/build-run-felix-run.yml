@@ -1,8 +1,7 @@
 name: Build RUN FELIX RUN APK
 
 on:
-  push:
-    branches: [run-felix-run]
+  workflow_dispatch:
 
 permissions:
   contents: read
