@@ -250,9 +250,9 @@ func _spawn_obstacle() -> void:
     sprite.texture = obstacle_textures[type]
     sprite.position.x = VIEW_W + 110.0
     sprite.z_index = 4
-    var scale_value := [0.72, 0.66, 0.72][type]
+    var scale_value: float = [0.72, 0.66, 0.72][type]
     sprite.scale = Vector2.ONE * scale_value
-    var h := [132.0, 150.0, 146.0][type] * scale_value
+    var h: float = [132.0, 150.0, 146.0][type] * scale_value
     sprite.position.y = GROUND_Y - h * 0.5 + 5.0
     add_child(sprite)
     obstacles.append({
