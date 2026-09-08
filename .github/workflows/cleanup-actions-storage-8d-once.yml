@@ -1,43 +1,21 @@
-name: Delete Actions Artifacts Only
+name: Cleanup Actions Storage Older Than 8 Days
 on:
+  workflow_dispatch:
   push:
     paths: ['.github/workflows/cleanup-actions-storage-8d-once.yml']
-permissions:
-  contents: read
-  actions: write
+permissions: {contents: read, actions: write}
 jobs:
-  delete-artifacts-only:
+  cleanup:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - name: Delete Actions artifacts only
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            for (let attempt = 0; attempt < 120; attempt++) {
-              const runs = await github.paginate(github.rest.actions.listWorkflowRunsForRepo, {
-                owner, repo, head_sha: context.sha, per_page: 100
-              });
-              const active = runs.filter(r => r.id !== context.runId && r.status !== 'completed');
-              if (active.length === 0) break;
-              console.log(`Waiting for ${active.length} other run(s) from this commit to finish...`);
-              await new Promise(resolve => setTimeout(resolve, 5000));
-            }
-            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {
-              owner, repo, per_page: 100
-            });
-            let deletedCount = 0;
-            let deletedBytes = 0;
-            for (const artifact of artifacts) {
-              if (artifact.expired) continue;
-              await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: artifact.id });
-              deletedCount++;
-              deletedBytes += artifact.size_in_bytes || 0;
-            }
-            const remaining = await github.paginate(github.rest.actions.listArtifactsForRepo, {
-              owner, repo, per_page: 100
-            });
-            const live = remaining.filter(a => !a.expired);
-            const remainingBytes = live.reduce((sum, a) => sum + (a.size_in_bytes || 0), 0);
-            console.log(`ARTIFACT_ONLY_CLEANUP deleted_count=${deletedCount} deleted_bytes=${deletedBytes} remaining_count=${live.length} remaining_bytes=${remainingBytes}`);
+      - name: Cleanup
+        env: {GH_TOKEN: '${{ github.token }}'}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d '8 days ago' +%s); ab=0; cb=0; ac=0; cc=0; af=$(mktemp); cf=$(mktemp)
+          p=1; while :; do j=$(gh api "/repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100&page=$p"); n=$(jq '.artifacts|length'<<<"$j"); jq -r '.artifacts[]|[.id,.size_in_bytes,.created_at]|@tsv'<<<"$j">>"$af"; [ "$n" -lt 100 ]&&break; p=$((p+1)); done
+          while IFS=$'\t' read -r id s t; do [ -z "${id:-}" ]&&continue; e=$(date -u -d "$t" +%s); if [ "$e" -lt "$cutoff" ]; then gh api --method DELETE "/repos/$GITHUB_REPOSITORY/actions/artifacts/$id"; ab=$((ab+s)); ac=$((ac+1)); fi; done<"$af"
+          p=1; while :; do j=$(gh api "/repos/$GITHUB_REPOSITORY/actions/caches?per_page=100&page=$p"); n=$(jq '.actions_caches|length'<<<"$j"); jq -r '.actions_caches[]|[.id,.size_in_bytes,.created_at,.last_accessed_at]|@tsv'<<<"$j">>"$cf"; [ "$n" -lt 100 ]&&break; p=$((p+1)); done
+          while IFS=$'\t' read -r id s c l; do [ -z "${id:-}" ]&&continue; t=${l:-$c}; e=$(date -u -d "$t" +%s); if [ "$e" -lt "$cutoff" ]; then gh api --method DELETE "/repos/$GITHUB_REPOSITORY/actions/caches/$id"; cb=$((cb+s)); cc=$((cc+1)); fi; done<"$cf"
+          echo "CLEANUP_SUMMARY repo=$GITHUB_REPOSITORY artifacts_count=$ac artifacts_bytes=$ab caches_count=$cc caches_bytes=$cb total_bytes=$((ab+cb))"
